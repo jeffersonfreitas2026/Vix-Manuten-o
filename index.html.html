@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ERP PCP - Dashboard com Gráficos e Tabelas</title>
+  <style>
+    :root {
+      --primary: #6EBC24;
+      --primary-dark: #4f9417;
+      --dark: #0f172a;
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --purple: #7c3aed;
+      --gray: #64748b;
+      --border: #e5e7eb;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --success-bg: #dcfce7;
+      --warning-bg: #fef3c7;
+      --danger-bg: #fee2e2;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: #1f2937;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    aside {
+      background: var(--dark);
+      color: white;
+      padding: 24px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      margin-bottom: 30px;
+    }
+
+    .brand h1 {
+      font-size: 24px;
+      color: var(--primary);
+      line-height: 1.1;
+    }
+
+    .brand p {
+      color: #cbd5e1;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .menu button {
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      text-align: left;
+      padding: 13px 14px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .menu button:hover,
+    .menu button.active {
+      background: rgba(110, 188, 36, .18);
+      color: white;
+    }
+
+    main {
+      padding: 24px;
+    }
+
+    .topbar {
+      background: linear-gradient(135deg, #ffffff, #eef6ff);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 22px;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+    }
+
+    .topbar h2 {
+      color: var(--dark);
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+
+    .topbar p {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .system-pill {
+      background: var(--dark);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .system-pill span {
+      color: var(--primary);
+    }
+
+    .toolbar {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 22px;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, .05);
+    }
+
+    .toolbar button,
+    .toolbar select,
+    .toolbar input {
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 11px 13px;
+      font-weight: 800;
+      background: white;
+      color: #334155;
+      outline: none;
+    }
+
+    .toolbar button {
+      background: var(--dark);
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+
+    .toolbar button:hover {
+      background: var(--primary);
+    }
+
+    .toolbar .green {
+      background: var(--primary);
+    }
+
+    .toolbar .red {
+      background: var(--red);
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi::after {
+      content: "";
+      position: absolute;
+      right: -30px;
+      top: -30px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: rgba(110,188,36,.14);
+    }
+
+    .kpi.blue::after { background: rgba(37,99,235,.13); }
+    .kpi.yellow::after { background: rgba(245,158,11,.15); }
+    .kpi.red::after { background: rgba(239,68,68,.13); }
+    .kpi.purple::after { background: rgba(124,58,237,.13); }
+
+    .kpi .label {
+      color: var(--gray);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 9px;
+      letter-spacing: .04em;
+    }
+
+    .kpi strong {
+      display: block;
+      font-size: 32px;
+      color: var(--dark);
+      margin-bottom: 7px;
+    }
+
+    .kpi .trend {
+      font-size: 12px;
+      color: #475569;
+      position: relative;
+      z-index: 1;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
+      margin-bottom: 22px;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+
+    .panel-title h3 {
+      font-size: 19px;
+      color: var(--dark);
+    }
+
+    .tag {
+      font-size: 12px;
+      font-weight: 900;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #475569;
+      white-space: nowrap;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 100%;
+      height: 280px;
+      display: block;
+    }
+
+    .small-canvas {
+      height: 220px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      overflow: hidden;
+      border-radius: 16px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    th {
+      background: var(--dark);
+      color: white;
+      position: sticky;
+      top: 0;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .table-wrap {
+      max-height: 420px;
+      overflow: auto;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .ok { background: var(--success-bg); color: #166534; }
+    .warn { background: var(--warning-bg); color: #92400e; }
+    .danger { background: var(--danger-bg); color: #991b1b; }
+    .info { background: #dbeafe; color: #1d4ed8; }
+
+    .tabs {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: #f1f5f9;
+      color: #334155;
+      padding: 11px 14px;
+      border-radius: 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .module-header {
+      margin-bottom: 16px;
+    }
+
+    .module-header h3 {
+      color: var(--dark);
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .module-header p {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    input, select, textarea {
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 12px;
+      outline: none;
+      font-size: 14px;
+      background: white;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(110, 188, 36, .15);
+    }
+
+    button.save {
+      border: none;
+      background: var(--dark);
+      color: white;
+      border-radius: 14px;
+      padding: 13px 16px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    button.save:hover {
+      background: var(--primary);
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .edit-btn, .delete-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .edit-btn { background: #dbeafe; color: #1d4ed8; }
+    .delete-btn { background: #fee2e2; color: #991b1b; }
+
+    .empty {
+      color: var(--gray);
+      text-align: center;
+      padding: 18px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .summary-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .summary-item {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 12px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .summary-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: #dcfce7;
+      color: #166534;
+      font-weight: 900;
+    }
+
+    .summary-icon.warn {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .summary-icon.danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .summary-item strong {
+      display: block;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .summary-item p {
+      color: var(--gray);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 1200px) {
+      .app { grid-template-columns: 1fr; }
+      aside { position: relative; height: auto; }
+      .menu { flex-direction: row; flex-wrap: wrap; }
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+      .grid, .grid-3 { grid-template-columns: 1fr; }
+      form { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      main { padding: 14px; }
+      .kpis, form { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      canvas { height: 240px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <aside>
+    <div class="brand">
+      <h1>VixPar<br>Manutenção</h1>
+      <p>ERP PCP com gráficos funcionais</p>
+    </div>
+
+    <nav class="menu">
+      <button class="active" onclick="scrollToSection('dashboard')">📊 Dashboard</button>
+      <button onclick="scrollToSection('graficos')">📈 Gráficos</button>
+      <button onclick="scrollToSection('tabelas')">📋 Tabelas</button>
+      <button onclick="abrirAbaDireta('produto')">🏭 Produto Pai</button>
+      <button onclick="abrirAbaDireta('bom')">🧩 BOM</button>
+      <button onclick="abrirAbaDireta('pmp')">📅 PMP</button>
+      <button onclick="abrirAbaDireta('mrp')">📦 MRP</button>
+      <button onclick="abrirAbaDireta('crp')">⚙️ CRP</button>
+      <button onclick="abrirAbaDireta('estoque')">🏷️ Estoque</button>
+    </nav>
+  </aside>
+
+  <main>
+    <section id="dashboard" class="topbar">
+      <div>
+        <h2>Dashboard Executivo PCP</h2>
+        <p>Gráficos, tabelas funcionais, KPIs e cadastros editáveis para manutenção industrial.</p>
+      </div>
+      <div class="system-pill">Status: <span>Operacional</span></div>
+    </section>
+
+    <section class="toolbar">
+      <button class="green" onclick="alimentarDadosAleatorios()">Gerar dados aleatórios</button>
+      <button onclick="atualizarTudo()">Atualizar dashboard</button>
+      <button class="red" onclick="limparBase()">Limpar base</button>
+      <select id="filtroModulo" onchange="renderTabelaGeral()">
+        <option value="todos">Todos os módulos</option>
+        <option value="produto">Produto Pai</option>
+        <option value="bom">BOM</option>
+        <option value="pmp">PMP</option>
+        <option value="mrp">MRP</option>
+        <option value="crp">CRP</option>
+        <option value="estoque">Estoque</option>
+      </select>
+      <input id="pesquisaTabela" oninput="renderTabelaGeral()" placeholder="Pesquisar nas tabelas..." />
+    </section>
+
+    <section class="kpis">
+      <div class="kpi">
+        <div class="label">Produtos Pai</div>
+        <strong id="kpiProdutos">0</strong>
+        <div class="trend">Equipamentos principais</div>
+      </div>
+      <div class="kpi blue">
+        <div class="label">Itens BOM</div>
+        <strong id="kpiBom">0</strong>
+        <div class="trend">Componentes vinculados</div>
+      </div>
+      <div class="kpi yellow">
+        <div class="label">Ordens PMP</div>
+        <strong id="kpiPmp">0</strong>
+        <div class="trend">Planos de produção</div>
+      </div>
+      <div class="kpi red">
+        <div class="label">Alertas</div>
+        <strong id="kpiAlertas">0</strong>
+        <div class="trend">Material, estoque ou capacidade</div>
+      </div>
+      <div class="kpi purple">
+        <div class="label">Total Registros</div>
+        <strong id="kpiTotal">0</strong>
+        <div class="trend">Base geral do ERP</div>
+      </div>
+    </section>
+
+    <section id="graficos" class="grid">
+      <div class="panel">
+        <div class="panel-title">
+          <h3>Volume por Módulo</h3>
+          <span class="tag">Gráfico de barras</span>
+        </div>
+        <canvas id="barChart" width="800" height="300"></canvas>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <h3>Distribuição dos Registros</h3>
+          <span class="tag">Gráfico pizza</span>
+        </div>
+        <canvas id="pieChart" width="500" height="300"></canvas>
+      </div>
+    </section>
+
+    <section class="grid-3">
+      <div class="panel">
+        <div class="panel-title">
+          <h3>Status do PMP</h3>
+          <span class="tag">Demanda x Produção</span>
+        </div>
+        <canvas class="small-canvas" id="pmpChart" width="420" height="260"></canvas>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <h3>MRP Crítico</h3>
+          <span class="tag">Necessidade líquida</span>
+        </div>
+        <canvas class="small-canvas" id="mrpChart" width="420" height="260"></canvas>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <h3>CRP Capacidade</h3>
+          <span class="tag">Horas</span>
+        </div>
+        <canvas class="small-canvas" id="crpChart" width="420" height="260"></canvas>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <div class="panel-title">
+          <h3>Estoque Inicial x Segurança</h3>
+          <span class="tag">Comparativo</span>
+        </div>
+        <canvas id="estoqueChart" width="800" height="300"></canvas>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <h3>Resumo Inteligente</h3>
+          <span class="tag">Leitura rápida</span>
+        </div>
+        <div id="resumoInteligente" class="summary-list"></div>
+      </div>
+    </section>
+
+    <section id="tabelas" class="panel">
+      <div class="panel-title">
+        <h3>Tabela Geral Funcional</h3>
+        <span class="tag">Filtro + pesquisa</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Módulo</th>
+              <th>Descrição</th>
+              <th>Quantidade/Valor</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaGeral"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <h3>Últimas Movimentações</h3>
+        <span class="tag">Histórico recente</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Módulo</th>
+              <th>Descrição</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+          <tbody id="activityTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="abrirAba(event, 'produto')">Produto Pai</button>
+        <button class="tab-btn" onclick="abrirAba(event, 'bom')">BOM</button>
+        <button class="tab-btn" onclick="abrirAba(event, 'pmp')">PMP</button>
+        <button class="tab-btn" onclick="abrirAba(event, 'mrp')">MRP</button>
+        <button class="tab-btn" onclick="abrirAba(event, 'crp')">CRP</button>
+        <button class="tab-btn" onclick="abrirAba(event, 'estoque')">Estoque Inicial</button>
+      </div>
+
+      <div id="produto" class="tab-content active">
+        <div class="module-header">
+          <h3>Cadastro de Produto Pai</h3>
+          <p>Cadastre equipamentos principais de manutenção.</p>
+        </div>
+        <form id="formProduto" onsubmit="salvarProduto(event)">
+          <label>Código do Produto<input id="produtoCodigo" required placeholder="Ex: MAN-001"></label>
+          <label>Nome do Produto Pai<input id="produtoNome" required placeholder="Ex: Bomba Hidráulica"></label>
+          <label>Unidade<select id="produtoUnidade"><option>Unidade</option><option>Kg</option><option>mm</option><option>Litro</option><option>Metro</option></select></label>
+          <label class="full">Descrição Técnica<textarea id="produtoDescricao" rows="3" placeholder="Informe especificações técnicas"></textarea></label>
+          <button id="btnProduto" class="save">Salvar Produto Pai</button>
+        </form>
+        <div class="table-wrap">
+          <table><thead><tr><th>Código</th><th>Produto</th><th>Unidade</th><th>Descrição</th><th>Ações</th></tr></thead><tbody id="tabelaProduto"></tbody></table>
+        </div>
+      </div>
+
+      <div id="bom" class="tab-content">
+        <div class="module-header">
+          <h3>BOM do Produto Pai</h3>
+          <p>Cadastre componentes e quantidades necessárias.</p>
+        </div>
+        <form id="formBom" onsubmit="salvarBom(event)">
+          <label>Produto Pai<input id="bomProduto" required placeholder="Ex: MAN-001 - Bomba Hidráulica"></label>
+          <label>Item / Componente<input id="bomItem" required placeholder="Ex: Rolamento"></label>
+          <label>Tipo / Especificação<input id="bomTipo" placeholder="Ex: 6205 ZZ"></label>
+          <label>Unidade<select id="bomUnidade"><option>Unidade</option><option>Kg</option><option>mm</option><option>Litro</option><option>Metro</option></select></label>
+          <label>Quantidade<input id="bomQuantidade" type="number" min="0" step="0.01" required></label>
+          <button id="btnBom" class="save">Adicionar ao BOM</button>
+        </form>
+        <div class="table-wrap">
+          <table><thead><tr><th>Produto Pai</th><th>Item</th><th>Tipo</th><th>Unidade</th><th>Quantidade</th><th>Ações</th></tr></thead><tbody id="tabelaBom"></tbody></table>
+        </div>
+      </div>
+
+      <div id="pmp" class="tab-content">
+        <div class="module-header">
+          <h3>PMP - Plano Mestre</h3>
+          <p>Demanda prevista e produção planejada.</p>
+        </div>
+        <form id="formPmp" onsubmit="salvarPmp(event)">
+          <label>Produto Pai<input id="pmpProduto" required placeholder="Ex: MAN-001"></label>
+          <label>Demanda Prevista<input id="pmpDemanda" type="number" min="0" required></label>
+          <label>Produção Planejada<input id="pmpProducao" type="number" min="0" required></label>
+          <label>Período<input id="pmpPeriodo" type="month"></label>
+          <button id="btnPmp" class="save">Salvar PMP</button>
+        </form>
+        <div class="table-wrap">
+          <table><thead><tr><th>Produto</th><th>Demanda</th><th>Produção</th><th>Período</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaPmp"></tbody></table>
+        </div>
+      </div>
+
+      <div id="mrp" class="tab-content">
+        <div class="module-header">
+          <h3>MRP - Necessidade de Materiais</h3>
+          <p>Necessidade líquida = bruta + segurança - disponível.</p>
+        </div>
+        <form id="formMrp" onsubmit="salvarMrp(event)">
+          <label>Material<input id="mrpMaterial" required placeholder="Ex: Correia Industrial"></label>
+          <label>Necessidade Bruta<input id="mrpBruta" type="number" min="0" required></label>
+          <label>Estoque Disponível<input id="mrpDisponivel" type="number" min="0" required></label>
+          <label>Estoque de Segurança<input id="mrpSeguranca" type="number" min="0" value="0" required></label>
+          <button id="btnMrp" class="save">Calcular MRP</button>
+        </form>
+        <div class="table-wrap">
+          <table><thead><tr><th>Material</th><th>Nec. Bruta</th><th>Disponível</th><th>Segurança</th><th>Nec. Líquida</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaMrp"></tbody></table>
+        </div>
+      </div>
+
+      <div id="crp" class="tab-content">
+        <div class="module-header">
+          <h3>CRP - Capacidade</h3>
+          <p>Controle de horas disponíveis e horas necessárias.</p>
+        </div>
+        <form id="formCrp" onsubmit="salvarCrp(event)">
+          <label>Tipo de Recurso<select id="crpTipo"><option>Recursos Humanos</option><option>Máquina</option><option>Equipamento</option><option>Setor Produtivo</option></select></label>
+          <label>Nome do Recurso<input id="crpRecurso" required placeholder="Ex: Técnico Mecânico"></label>
+          <label>Horas Disponíveis<input id="crpDisponivel" type="number" min="0" step="0.01" required></label>
+          <label>Horas Necessárias<input id="crpNecessaria" type="number" min="0" step="0.01" required></label>
+          <label>Produção por Dia<input id="crpProducaoDia" type="number" min="0" placeholder="Ex: 20"></label>
+          <button id="btnCrp" class="save">Salvar CRP</button>
+        </form>
+        <div class="table-wrap">
+          <table><thead><tr><th>Tipo</th><th>Recurso</th><th>H. Disp.</th><th>H. Nec.</th><th>Prod./Dia</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaCrp"></tbody></table>
+        </div>
+      </div>
+
+      <div id="estoque" class="tab-content">
+        <div class="module-header">
+          <h3>Estoque Inicial</h3>
+          <p>Controle de estoque atual e segurança.</p>
+        </div>
+        <form id="formEstoque" onsubmit="salvarEstoque(event)">
+          <label>Item / Material<input id="estoqueItem" required placeholder="Ex: Óleo Lubrificante"></label>
+          <label>Unidade<select id="estoqueUnidade"><option>Unidade</option><option>Kg</option><option>mm</option><option>Litro</option><option>Metro</option></select></label>
+          <label>Estoque Inicial<input id="estoqueInicial" type="number" min="0" required></label>
+          <label>Estoque de Segurança<input id="estoqueSeguranca" type="number" min="0" required></label>
+          <label>Local<input id="estoqueLocal" placeholder="Ex: Almoxarifado 01"></label>
+          <button id="btnEstoque" class="save">Salvar Estoque</button>
+        </form>
+        <div class="table-wrap">
+          <table><thead><tr><th>Item</th><th>Unidade</th><th>Inicial</th><th>Segurança</th><th>Local</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaEstoque"></tbody></table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  const db = {
+    produto: [],
+    bom: [],
+    pmp: [],
+    mrp: [],
+    crp: [],
+    estoque: [],
+    atividades: []
+  };
+
+  const editando = {
+    produto: null,
+    bom: null,
+    pmp: null,
+    mrp: null,
+    crp: null,
+    estoque: null
+  };
+
+  function scrollToSection(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function abrirAba(event, aba) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(aba).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function abrirAbaDireta(aba) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(aba).classList.add('active');
+
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const map = { produto:0, bom:1, pmp:2, mrp:3, crp:4, estoque:5 };
+    tabBtns[map[aba]].classList.add('active');
+
+    document.querySelector('.panel:last-of-type').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function badge(texto, classe) {
+    return '<span class="badge ' + classe + '">' + texto + '</span>';
+  }
+
+  function acoes(modulo, index) {
+    return `
+      <div class="actions">
+        <button class="edit-btn" onclick="editarItem('${modulo}', ${index})">Editar</button>
+        <button class="delete-btn" onclick="excluirItem('${modulo}', ${index})">Excluir</button>
+      </div>
+    `;
+  }
+
+  function registrarAtividade(modulo, descricao, resultado, classe) {
+    db.atividades.unshift({ modulo, descricao, resultado, classe });
+    if (db.atividades.length > 10) db.atividades.pop();
+    renderAtividades();
+  }
+
+  function calcularAlertas() {
+    let alertas = 0;
+    db.pmp.forEach(i => { if (Number(i.producao) < Number(i.demanda)) alertas++; });
+    db.mrp.forEach(i => { if (Number(i.liquida) > 0) alertas++; });
+    db.crp.forEach(i => { if (Number(i.disponivel) < Number(i.necessaria)) alertas++; });
+    db.estoque.forEach(i => { if (Number(i.inicial) < Number(i.seguranca)) alertas++; });
+    return alertas;
+  }
+
+  function atualizarKPIs() {
+    document.getElementById('kpiProdutos').innerText = db.produto.length;
+    document.getElementById('kpiBom').innerText = db.bom.length;
+    document.getElementById('kpiPmp').innerText = db.pmp.length;
+    document.getElementById('kpiAlertas').innerText = calcularAlertas();
+
+    const total = db.produto.length + db.bom.length + db.pmp.length + db.mrp.length + db.crp.length + db.estoque.length;
+    document.getElementById('kpiTotal').innerText = total;
+  }
+
+  function atualizarTudo() {
+    renderProduto();
+    renderBom();
+    renderPmp();
+    renderMrp();
+    renderCrp();
+    renderEstoque();
+    renderTabelaGeral();
+    renderAtividades();
+    atualizarKPIs();
+    desenharGraficos();
+    renderResumo();
+  }
+
+  function drawBarChart(canvasId, labels, values, options = {}) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const padding = 45;
+    const chartWidth = width - padding * 2;
+    const chartHeight = height - padding * 2;
+    const maxValue = Math.max(...values, 1);
+    const barWidth = chartWidth / values.length * 0.62;
+    const gap = chartWidth / values.length;
+
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= 4; i++) {
+      const y = padding + (chartHeight / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(width - padding, y);
+      ctx.stroke();
+    }
+
+    values.forEach((value, index) => {
+      const x = padding + gap * index + (gap - barWidth) / 2;
+      const barHeight = (value / maxValue) * chartHeight;
+      const y = height - padding - barHeight;
+
+      ctx.fillStyle = options.colors ? options.colors[index % options.colors.length] : '#6EBC24';
+      ctx.fillRect(x, y, barWidth, barHeight);
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 13px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(value, x + barWidth / 2, y - 8);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px Arial';
+      ctx.save();
+      ctx.translate(x + barWidth / 2, height - 18);
+      if (labels[index].length > 9) {
+        ctx.rotate(-0.4);
+      }
+      ctx.fillText(labels[index], 0, 0);
+      ctx.restore();
+    });
+  }
+
+  function drawPieChart(canvasId, labels, values, colors) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const total = values.reduce((a, b) => a + b, 0) || 1;
+    const cx = width * 0.37;
+    const cy = height / 2;
+    const radius = Math.min(width, height) * 0.28;
+
+    let start = -Math.PI / 2;
+
+    values.forEach((value, index) => {
+      const slice = (value / total) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, radius, start, start + slice);
+      ctx.closePath();
+      ctx.fillStyle = colors[index % colors.length];
+      ctx.fill();
+      start += slice;
+    });
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'left';
+
+    labels.forEach((label, index) => {
+      const y = 55 + index * 28;
+      ctx.fillStyle = colors[index % colors.length];
+      ctx.fillRect(width * 0.68, y - 11, 14, 14);
+      ctx.fillStyle = '#334155';
+      ctx.font = '12px Arial';
+      ctx.fillText(label + ': ' + values[index], width * 0.68 + 22, y);
+    });
+  }
+
+  function drawGroupedBarChart(canvasId, labels, valuesA, valuesB, labelA, labelB) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const padding = 42;
+    const chartWidth = width - padding * 2;
+    const chartHeight = height - padding * 2;
+    const maxValue = Math.max(...valuesA, ...valuesB, 1);
+    const groupWidth = chartWidth / labels.length;
+    const barWidth = groupWidth * 0.28;
+
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= 3; i++) {
+      const y = padding + (chartHeight / 3) * i;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(width - padding, y);
+      ctx.stroke();
+    }
+
+    labels.forEach((label, i) => {
+      const x = padding + groupWidth * i + groupWidth / 2;
+      const hA = (valuesA[i] / maxValue) * chartHeight;
+      const hB = (valuesB[i] / maxValue) * chartHeight;
+
+      ctx.fillStyle = '#2563eb';
+      ctx.fillRect(x - barWidth - 2, height - padding - hA, barWidth, hA);
+
+      ctx.fillStyle = '#6EBC24';
+      ctx.fillRect(x + 2, height - padding - hB, barWidth, hB);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(label.substring(0, 8), x, height - 18);
+    });
+
+    ctx.fillStyle = '#2563eb';
+    ctx.fillRect(20, 14, 12, 12);
+    ctx.fillStyle = '#334155';
+    ctx.font = '12px Arial';
+    ctx.fillText(labelA, 38, 24);
+
+    ctx.fillStyle = '#6EBC24';
+    ctx.fillRect(130, 14, 12, 12);
+    ctx.fillStyle = '#334155';
+    ctx.fillText(labelB, 148, 24);
+  }
+
+  function desenharGraficos() {
+    const labels = ['Produto', 'BOM', 'PMP', 'MRP', 'CRP', 'Estoque'];
+    const values = [db.produto.length, db.bom.length, db.pmp.length, db.mrp.length, db.crp.length, db.estoque.length];
+    const colors = ['#6EBC24', '#2563eb', '#f59e0b', '#ef4444', '#7c3aed', '#0891b2'];
+
+    drawBarChart('barChart', labels, values, { colors });
+    drawPieChart('pieChart', labels, values, colors);
+
+    const pmpLabels = db.pmp.map(i => i.produto.split(' ')[0]).slice(0, 6);
+    const demandas = db.pmp.map(i => Number(i.demanda)).slice(0, 6);
+    const producoes = db.pmp.map(i => Number(i.producao)).slice(0, 6);
+    drawGroupedBarChart('pmpChart', pmpLabels.length ? pmpLabels : ['Sem dados'], demandas.length ? demandas : [0], producoes.length ? producoes : [0], 'Demanda', 'Produção');
+
+    const mrpLabels = db.mrp.map(i => i.material.substring(0, 8)).slice(0, 6);
+    const mrpValues = db.mrp.map(i => Number(i.liquida)).slice(0, 6);
+    drawBarChart('mrpChart', mrpLabels.length ? mrpLabels : ['Sem dados'], mrpValues.length ? mrpValues : [0], { colors: ['#ef4444', '#f59e0b', '#2563eb'] });
+
+    const crpLabels = db.crp.map(i => i.recurso.substring(0, 8)).slice(0, 6);
+    const crpDisp = db.crp.map(i => Number(i.disponivel)).slice(0, 6);
+    const crpNec = db.crp.map(i => Number(i.necessaria)).slice(0, 6);
+    drawGroupedBarChart('crpChart', crpLabels.length ? crpLabels : ['Sem dados'], crpDisp.length ? crpDisp : [0], crpNec.length ? crpNec : [0], 'Disponível', 'Necessário');
+
+    const estoqueLabels = db.estoque.map(i => i.item.substring(0, 10)).slice(0, 8);
+    const estoqueInicial = db.estoque.map(i => Number(i.inicial)).slice(0, 8);
+    const estoqueSeg = db.estoque.map(i => Number(i.seguranca)).slice(0, 8);
+    drawGroupedBarChart('estoqueChart', estoqueLabels.length ? estoqueLabels : ['Sem dados'], estoqueInicial.length ? estoqueInicial : [0], estoqueSeg.length ? estoqueSeg : [0], 'Inicial', 'Segurança');
+  }
+
+  function renderResumo() {
+    const alertas = calcularAlertas();
+    const mrpCritico = db.mrp.filter(i => Number(i.liquida) > 0).length;
+    const crpCritico = db.crp.filter(i => Number(i.disponivel) < Number(i.necessaria)).length;
+    const estoqueCritico = db.estoque.filter(i => Number(i.inicial) < Number(i.seguranca)).length;
+
+    document.getElementById('resumoInteligente').innerHTML = `
+      <div class="summary-item">
+        <div class="summary-icon ${alertas > 0 ? 'warn' : ''}">${alertas > 0 ? '!' : '✓'}</div>
+        <div>
+          <strong>${alertas} alertas operacionais</strong>
+          <p>Somatório de pendências em PMP, MRP, CRP e estoque de segurança.</p>
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-icon ${mrpCritico > 0 ? 'warn' : ''}">M</div>
+        <div>
+          <strong>${mrpCritico} materiais precisam de ação</strong>
+          <p>Itens com necessidade líquida positiva no MRP.</p>
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-icon ${crpCritico > 0 ? 'danger' : ''}">C</div>
+        <div>
+          <strong>${crpCritico} recursos com capacidade insuficiente</strong>
+          <p>Recursos onde as horas necessárias superam as horas disponíveis.</p>
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-icon ${estoqueCritico > 0 ? 'danger' : ''}">E</div>
+        <div>
+          <strong>${estoqueCritico} itens abaixo do estoque de segurança</strong>
+          <p>Materiais que exigem recomposição de estoque.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAtividades() {
+    const table = document.getElementById('activityTable');
+    if (!db.atividades.length) {
+      table.innerHTML = '<tr><td colspan="3" class="empty">Nenhuma movimentação registrada.</td></tr>';
+      return;
+    }
+
+    table.innerHTML = db.atividades.map(a => `
+      <tr>
+        <td><strong>${a.modulo}</strong></td>
+        <td>${a.descricao}</td>
+        <td>${badge(a.resultado, a.classe)}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderTabelaGeral() {
+    const filtro = document.getElementById('filtroModulo').value;
+    const busca = document.getElementById('pesquisaTabela').value.toLowerCase();
+    let linhas = [];
+
+    if (filtro === 'todos' || filtro === 'produto') {
+      db.produto.forEach(i => linhas.push({
+        modulo: 'Produto Pai',
+        descricao: i.codigo + ' - ' + i.nome,
+        valor: i.unidade,
+        status: badge('Cadastrado', 'ok')
+      }));
+    }
+
+    if (filtro === 'todos' || filtro === 'bom') {
+      db.bom.forEach(i => linhas.push({
+        modulo: 'BOM',
+        descricao: i.item + ' | ' + i.produto,
+        valor: i.quantidade + ' ' + i.unidade,
+        status: badge('Vinculado', 'info')
+      }));
+    }
+
+    if (filtro === 'todos' || filtro === 'pmp') {
+      db.pmp.forEach(i => {
+        const ok = Number(i.producao) >= Number(i.demanda);
+        linhas.push({
+          modulo: 'PMP',
+          descricao: i.produto + ' | ' + (i.periodo || '-'),
+          valor: 'Demanda: ' + i.demanda + ' / Produção: ' + i.producao,
+          status: badge(ok ? 'Atende' : 'Abaixo', ok ? 'ok' : 'warn')
+        });
+      });
+    }
+
+    if (filtro === 'todos' || filtro === 'mrp') {
+      db.mrp.forEach(i => linhas.push({
+        modulo: 'MRP',
+        descricao: i.material,
+        valor: 'Nec. líquida: ' + i.liquida,
+        status: badge(Number(i.liquida) > 0 ? 'Comprar/produzir' : 'OK', Number(i.liquida) > 0 ? 'warn' : 'ok')
+      }));
+    }
+
+    if (filtro === 'todos' || filtro === 'crp') {
+      db.crp.forEach(i => {
+        const ok = Number(i.disponivel) >= Number(i.necessaria);
+        linhas.push({
+          modulo: 'CRP',
+          descricao: i.recurso + ' | ' + i.tipo,
+          valor: i.disponivel + 'h / ' + i.necessaria + 'h',
+          status: badge(ok ? 'Capacidade OK' : 'Insuficiente', ok ? 'ok' : 'danger')
+        });
+      });
+    }
+
+    if (filtro === 'todos' || filtro === 'estoque') {
+      db.estoque.forEach(i => {
+        const ok = Number(i.inicial) >= Number(i.seguranca);
+        linhas.push({
+          modulo: 'Estoque',
+          descricao: i.item + ' | ' + (i.local || '-'),
+          valor: i.inicial + ' / Segurança: ' + i.seguranca,
+          status: badge(ok ? 'Normal' : 'Abaixo', ok ? 'ok' : 'danger')
+        });
+      });
+    }
+
+    linhas = linhas.filter(l => {
+      const text = (l.modulo + ' ' + l.descricao + ' ' + l.valor).toLowerCase();
+      return text.includes(busca);
+    });
+
+    const tabela = document.getElementById('tabelaGeral');
+
+    if (!linhas.length) {
+      tabela.innerHTML = '<tr><td colspan="4" class="empty">Nenhum registro encontrado.</td></tr>';
+      return;
+    }
+
+    tabela.innerHTML = linhas.map(l => `
+      <tr>
+        <td><strong>${l.modulo}</strong></td>
+        <td>${l.descricao}</td>
+        <td>${l.valor}</td>
+        <td>${l.status}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderProduto() {
+    tabelaProduto.innerHTML = db.produto.length ? db.produto.map((i, idx) => `
+      <tr>
+        <td>${i.codigo}</td>
+        <td>${i.nome}</td>
+        <td>${i.unidade}</td>
+        <td>${i.descricao || '-'}</td>
+        <td>${acoes('produto', idx)}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="5" class="empty">Nenhum produto cadastrado.</td></tr>';
+  }
+
+  function renderBom() {
+    tabelaBom.innerHTML = db.bom.length ? db.bom.map((i, idx) => `
+      <tr>
+        <td>${i.produto}</td>
+        <td>${i.item}</td>
+        <td>${i.tipo || '-'}</td>
+        <td>${i.unidade}</td>
+        <td>${i.quantidade}</td>
+        <td>${acoes('bom', idx)}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="6" class="empty">Nenhum item BOM cadastrado.</td></tr>';
+  }
+
+  function renderPmp() {
+    tabelaPmp.innerHTML = db.pmp.length ? db.pmp.map((i, idx) => {
+      const ok = Number(i.producao) >= Number(i.demanda);
+      return `
+        <tr>
+          <td>${i.produto}</td>
+          <td>${i.demanda}</td>
+          <td>${i.producao}</td>
+          <td>${i.periodo || '-'}</td>
+          <td>${badge(ok ? 'Atende demanda' : 'Abaixo da demanda', ok ? 'ok' : 'warn')}</td>
+          <td>${acoes('pmp', idx)}</td>
+        </tr>
+      `;
+    }).join('') : '<tr><td colspan="6" class="empty">Nenhum PMP cadastrado.</td></tr>';
+  }
+
+  function renderMrp() {
+    tabelaMrp.innerHTML = db.mrp.length ? db.mrp.map((i, idx) => `
+      <tr>
+        <td>${i.material}</td>
+        <td>${i.bruta}</td>
+        <td>${i.disponivel}</td>
+        <td>${i.seguranca}</td>
+        <td><strong>${i.liquida}</strong></td>
+        <td>${badge(Number(i.liquida) > 0 ? 'Comprar/produzir' : 'Estoque suficiente', Number(i.liquida) > 0 ? 'warn' : 'ok')}</td>
+        <td>${acoes('mrp', idx)}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="7" class="empty">Nenhum MRP calculado.</td></tr>';
+  }
+
+  function renderCrp() {
+    tabelaCrp.innerHTML = db.crp.length ? db.crp.map((i, idx) => {
+      const ok = Number(i.disponivel) >= Number(i.necessaria);
+      return `
+        <tr>
+          <td>${i.tipo}</td>
+          <td>${i.recurso}</td>
+          <td>${i.disponivel}h</td>
+          <td>${i.necessaria}h</td>
+          <td>${i.producaoDia || '-'}</td>
+          <td>${badge(ok ? 'Capacidade OK' : 'Insuficiente', ok ? 'ok' : 'danger')}</td>
+          <td>${acoes('crp', idx)}</td>
+        </tr>
+      `;
+    }).join('') : '<tr><td colspan="7" class="empty">Nenhum CRP cadastrado.</td></tr>';
+  }
+
+  function renderEstoque() {
+    tabelaEstoque.innerHTML = db.estoque.length ? db.estoque.map((i, idx) => {
+      const ok = Number(i.inicial) >= Number(i.seguranca);
+      return `
+        <tr>
+          <td>${i.item}</td>
+          <td>${i.unidade}</td>
+          <td>${i.inicial}</td>
+          <td>${i.seguranca}</td>
+          <td>${i.local || '-'}</td>
+          <td>${badge(ok ? 'Normal' : 'Abaixo do segurança', ok ? 'ok' : 'danger')}</td>
+          <td>${acoes('estoque', idx)}</td>
+        </tr>
+      `;
+    }).join('') : '<tr><td colspan="7" class="empty">Nenhum estoque cadastrado.</td></tr>';
+  }
+
+  function salvarProduto(e) {
+    e.preventDefault();
+
+    const item = {
+      codigo: produtoCodigo.value,
+      nome: produtoNome.value,
+      unidade: produtoUnidade.value,
+      descricao: produtoDescricao.value
+    };
+
+    if (editando.produto !== null) {
+      db.produto[editando.produto] = item;
+      editando.produto = null;
+      btnProduto.textContent = 'Salvar Produto Pai';
+      registrarAtividade('Produto Pai', item.codigo + ' - ' + item.nome, 'Atualizado', 'warn');
+    } else {
+      db.produto.push(item);
+      registrarAtividade('Produto Pai', item.codigo + ' - ' + item.nome, 'Cadastrado', 'ok');
+    }
+
+    e.target.reset();
+    atualizarTudo();
+  }
+
+  function salvarBom(e) {
+    e.preventDefault();
+
+    const item = {
+      produto: bomProduto.value,
+      item: bomItem.value,
+      tipo: bomTipo.value,
+      unidade: bomUnidade.value,
+      quantidade: bomQuantidade.value
+    };
+
+    if (editando.bom !== null) {
+      db.bom[editando.bom] = item;
+      editando.bom = null;
+      btnBom.textContent = 'Adicionar ao BOM';
+      registrarAtividade('BOM', item.item, 'Atualizado', 'warn');
+    } else {
+      db.bom.push(item);
+      registrarAtividade('BOM', item.item + ' | Qtde: ' + item.quantidade, 'Vinculado', 'ok');
+    }
+
+    e.target.reset();
+    atualizarTudo();
+  }
+
+  function salvarPmp(e) {
+    e.preventDefault();
+
+    const item = {
+      produto: pmpProduto.value,
+      demanda: pmpDemanda.value,
+      producao: pmpProducao.value,
+      periodo: pmpPeriodo.value
+    };
+
+    if (editando.pmp !== null) {
+      db.pmp[editando.pmp] = item;
+      editando.pmp = null;
+      btnPmp.textContent = 'Salvar PMP';
+      registrarAtividade('PMP', item.produto, 'Atualizado', 'warn');
+    } else {
+      db.pmp.push(item);
+      registrarAtividade('PMP', item.produto, 'Salvo', 'ok');
+    }
+
+    e.target.reset();
+    atualizarTudo();
+  }
+
+  function salvarMrp(e) {
+    e.preventDefault();
+
+    const bruta = Number(mrpBruta.value);
+    const disponivel = Number(mrpDisponivel.value);
+    const seguranca = Number(mrpSeguranca.value);
+    const liquida = Math.max(0, bruta + seguranca - disponivel);
+
+    const item = {
+      material: mrpMaterial.value,
+      bruta,
+      disponivel,
+      seguranca,
+      liquida
+    };
+
+    if (editando.mrp !== null) {
+      db.mrp[editando.mrp] = item;
+      editando.mrp = null;
+      btnMrp.textContent = 'Calcular MRP';
+      registrarAtividade('MRP', item.material, 'Atualizado', 'warn');
+    } else {
+      db.mrp.push(item);
+      registrarAtividade('MRP', item.material + ' | Necessidade líquida: ' + liquida, liquida > 0 ? 'Necessário' : 'OK', liquida > 0 ? 'warn' : 'ok');
+    }
+
+    e.target.reset();
+    atualizarTudo();
+  }
+
+  function salvarCrp(e) {
+    e.preventDefault();
+
+    const item = {
+      tipo: crpTipo.value,
+      recurso: crpRecurso.value,
+      disponivel: crpDisponivel.value,
+      necessaria: crpNecessaria.value,
+      producaoDia: crpProducaoDia.value
+    };
+
+    if (editando.crp !== null) {
+      db.crp[editando.crp] = item;
+      editando.crp = null;
+      btnCrp.textContent = 'Salvar CRP';
+      registrarAtividade('CRP', item.recurso, 'Atualizado', 'warn');
+    } else {
+      db.crp.push(item);
+      registrarAtividade('CRP', item.recurso, 'Salvo', 'ok');
+    }
+
+    e.target.reset();
+    atualizarTudo();
+  }
+
+  function salvarEstoque(e) {
+    e.preventDefault();
+
+    const item = {
+      item: estoqueItem.value,
+      unidade: estoqueUnidade.value,
+      inicial: estoqueInicial.value,
+      seguranca: estoqueSeguranca.value,
+      local: estoqueLocal.value
+    };
+
+    if (editando.estoque !== null) {
+      db.estoque[editando.estoque] = item;
+      editando.estoque = null;
+      btnEstoque.textContent = 'Salvar Estoque';
+      registrarAtividade('Estoque', item.item, 'Atualizado', 'warn');
+    } else {
+      db.estoque.push(item);
+      registrarAtividade('Estoque', item.item, 'Salvo', 'ok');
+    }
+
+    e.target.reset();
+    atualizarTudo();
+  }
+
+  function editarItem(modulo, index) {
+    editando[modulo] = index;
+    abrirAbaDireta(modulo);
+    const item = db[modulo][index];
+
+    if (modulo === 'produto') {
+      produtoCodigo.value = item.codigo;
+      produtoNome.value = item.nome;
+      produtoUnidade.value = item.unidade;
+      produtoDescricao.value = item.descricao;
+      btnProduto.textContent = 'Atualizar Produto Pai';
+    }
+
+    if (modulo === 'bom') {
+      bomProduto.value = item.produto;
+      bomItem.value = item.item;
+      bomTipo.value = item.tipo;
+      bomUnidade.value = item.unidade;
+      bomQuantidade.value = item.quantidade;
+      btnBom.textContent = 'Atualizar BOM';
+    }
+
+    if (modulo === 'pmp') {
+      pmpProduto.value = item.produto;
+      pmpDemanda.value = item.demanda;
+      pmpProducao.value = item.producao;
+      pmpPeriodo.value = item.periodo;
+      btnPmp.textContent = 'Atualizar PMP';
+    }
+
+    if (modulo === 'mrp') {
+      mrpMaterial.value = item.material;
+      mrpBruta.value = item.bruta;
+      mrpDisponivel.value = item.disponivel;
+      mrpSeguranca.value = item.seguranca;
+      btnMrp.textContent = 'Atualizar MRP';
+    }
+
+    if (modulo === 'crp') {
+      crpTipo.value = item.tipo;
+      crpRecurso.value = item.recurso;
+      crpDisponivel.value = item.disponivel;
+      crpNecessaria.value = item.necessaria;
+      crpProducaoDia.value = item.producaoDia;
+      btnCrp.textContent = 'Atualizar CRP';
+    }
+
+    if (modulo === 'estoque') {
+      estoqueItem.value = item.item;
+      estoqueUnidade.value = item.unidade;
+      estoqueInicial.value = item.inicial;
+      estoqueSeguranca.value = item.seguranca;
+      estoqueLocal.value = item.local;
+      btnEstoque.textContent = 'Atualizar Estoque';
+    }
+  }
+
+  function excluirItem(modulo, index) {
+    if (!confirm('Deseja realmente excluir este item?')) return;
+    db[modulo].splice(index, 1);
+    registrarAtividade(modulo.toUpperCase(), 'Item excluído', 'Excluído', 'danger');
+    atualizarTudo();
+  }
+
+  function alimentarDadosAleatorios() {
+    db.produto = [
+      { codigo:'MAN-001', nome:'Bomba Hidráulica Industrial', unidade:'Unidade', descricao:'Conjunto usado em sistemas hidráulicos de máquinas pesadas.' },
+      { codigo:'MAN-002', nome:'Motor Elétrico Trifásico', unidade:'Unidade', descricao:'Motor 5CV para acionamento de equipamentos de produção.' },
+      { codigo:'MAN-003', nome:'Conjunto de Correias Transportadoras', unidade:'Metro', descricao:'Sistema de correias para movimentação interna de materiais.' },
+      { codigo:'MAN-004', nome:'Painel Elétrico de Comando', unidade:'Unidade', descricao:'Painel para controle e proteção de máquinas industriais.' },
+      { codigo:'MAN-005', nome:'Redutor de Velocidade', unidade:'Unidade', descricao:'Redutor mecânico para transmissão de torque.' },
+      { codigo:'MAN-006', nome:'Compressor de Ar Industrial', unidade:'Unidade', descricao:'Equipamento para geração de ar comprimido.' }
+    ];
+
+    db.bom = [
+      { produto:'MAN-001 - Bomba Hidráulica Industrial', item:'Rolamento blindado', tipo:'6205 ZZ', unidade:'Unidade', quantidade:2 },
+      { produto:'MAN-001 - Bomba Hidráulica Industrial', item:'Retentor de vedação', tipo:'Borracha nitrílica', unidade:'Unidade', quantidade:3 },
+      { produto:'MAN-002 - Motor Elétrico Trifásico', item:'Bobina de cobre', tipo:'Fio esmaltado', unidade:'Kg', quantidade:1.5 },
+      { produto:'MAN-002 - Motor Elétrico Trifásico', item:'Rolamento do eixo', tipo:'6304 ZZ', unidade:'Unidade', quantidade:2 },
+      { produto:'MAN-003 - Conjunto de Correias Transportadoras', item:'Correia industrial', tipo:'PVC reforçado', unidade:'Metro', quantidade:12 },
+      { produto:'MAN-003 - Conjunto de Correias Transportadoras', item:'Rolete de apoio', tipo:'Aço galvanizado', unidade:'Unidade', quantidade:8 },
+      { produto:'MAN-004 - Painel Elétrico de Comando', item:'Disjuntor tripolar', tipo:'32A', unidade:'Unidade', quantidade:2 },
+      { produto:'MAN-004 - Painel Elétrico de Comando', item:'Contator elétrico', tipo:'220V', unidade:'Unidade', quantidade:3 },
+      { produto:'MAN-005 - Redutor de Velocidade', item:'Engrenagem helicoidal', tipo:'Aço temperado', unidade:'Unidade', quantidade:1 },
+      { produto:'MAN-005 - Redutor de Velocidade', item:'Óleo lubrificante', tipo:'ISO VG 220', unidade:'Litro', quantidade:4 },
+      { produto:'MAN-006 - Compressor de Ar Industrial', item:'Filtro de ar', tipo:'Elemento filtrante', unidade:'Unidade', quantidade:2 },
+      { produto:'MAN-006 - Compressor de Ar Industrial', item:'Mangueira pneumática', tipo:'PU 10mm', unidade:'Metro', quantidade:6 }
+    ];
+
+    db.pmp = [
+      { produto:'MAN-001 - Bomba Hidráulica Industrial', demanda:10, producao:8, periodo:'2026-05' },
+      { produto:'MAN-002 - Motor Elétrico Trifásico', demanda:6, producao:6, periodo:'2026-05' },
+      { produto:'MAN-003 - Conjunto de Correias Transportadoras', demanda:14, producao:15, periodo:'2026-05' },
+      { produto:'MAN-004 - Painel Elétrico de Comando', demanda:5, producao:4, periodo:'2026-06' },
+      { produto:'MAN-005 - Redutor de Velocidade', demanda:7, producao:7, periodo:'2026-06' },
+      { produto:'MAN-006 - Compressor de Ar Industrial', demanda:4, producao:3, periodo:'2026-06' }
+    ];
+
+    db.mrp = [
+      { material:'Rolamento blindado 6205 ZZ', bruta:20, disponivel:12, seguranca:4, liquida:12 },
+      { material:'Retentor de vedação', bruta:30, disponivel:40, seguranca:10, liquida:0 },
+      { material:'Bobina de cobre', bruta:9, disponivel:4, seguranca:2, liquida:7 },
+      { material:'Correia industrial PVC', bruta:168, disponivel:120, seguranca:30, liquida:78 },
+      { material:'Disjuntor tripolar 32A', bruta:10, disponivel:8, seguranca:3, liquida:5 },
+      { material:'Óleo lubrificante ISO VG 220', bruta:28, disponivel:35, seguranca:10, liquida:3 },
+      { material:'Filtro de ar compressor', bruta:8, disponivel:12, seguranca:4, liquida:0 }
+    ];
+
+    db.crp = [
+      { tipo:'Recursos Humanos', recurso:'Técnico Mecânico', disponivel:40, necessaria:36, producaoDia:5 },
+      { tipo:'Recursos Humanos', recurso:'Eletricista Industrial', disponivel:32, necessaria:40, producaoDia:3 },
+      { tipo:'Máquina', recurso:'Bancada de Teste Hidráulico', disponivel:24, necessaria:20, producaoDia:4 },
+      { tipo:'Máquina', recurso:'Torno Mecânico', disponivel:30, necessaria:34, producaoDia:6 },
+      { tipo:'Equipamento', recurso:'Multímetro Industrial', disponivel:16, necessaria:10, producaoDia:8 },
+      { tipo:'Setor Produtivo', recurso:'Oficina de Manutenção', disponivel:60, necessaria:55, producaoDia:10 }
+    ];
+
+    db.estoque = [
+      { item:'Rolamento blindado 6205 ZZ', unidade:'Unidade', inicial:12, seguranca:10, local:'Almoxarifado A' },
+      { item:'Retentor de vedação', unidade:'Unidade', inicial:40, seguranca:15, local:'Almoxarifado A' },
+      { item:'Bobina de cobre', unidade:'Kg', inicial:4, seguranca:6, local:'Almoxarifado Elétrico' },
+      { item:'Correia industrial PVC', unidade:'Metro', inicial:120, seguranca:80, local:'Estoque Manutenção' },
+      { item:'Disjuntor tripolar 32A', unidade:'Unidade', inicial:8, seguranca:10, local:'Almoxarifado Elétrico' },
+      { item:'Óleo lubrificante ISO VG 220', unidade:'Litro', inicial:35, seguranca:20, local:'Lubrificantes' },
+      { item:'Filtro de ar compressor', unidade:'Unidade', inicial:12, seguranca:5, local:'Almoxarifado A' }
+    ];
+
+    db.atividades = [
+      { modulo:'Sistema', descricao:'Dashboard com gráficos e tabelas carregado.', resultado:'Carregado', classe:'ok' },
+      { modulo:'Produto Pai', descricao:'Produtos de manutenção cadastrados automaticamente.', resultado:'Cadastrado', classe:'ok' },
+      { modulo:'BOM', descricao:'Componentes vinculados aos produtos pai.', resultado:'Vinculado', classe:'info' },
+      { modulo:'MRP', descricao:'Necessidades líquidas calculadas para materiais críticos.', resultado:'Calculado', classe:'warn' },
+      { modulo:'CRP', descricao:'Capacidade avaliada para recursos humanos e máquinas.', resultado:'Avaliado', classe:'ok' }
+    ];
+
+    atualizarTudo();
+  }
+
+  function limparBase() {
+    if (!confirm('Deseja limpar todos os dados cadastrados?')) return;
+    db.produto = [];
+    db.bom = [];
+    db.pmp = [];
+    db.mrp = [];
+    db.crp = [];
+    db.estoque = [];
+    db.atividades = [];
+    atualizarTudo();
+  }
+
+  window.addEventListener('resize', () => desenharGraficos());
+
+  alimentarDadosAleatorios();
+</script>
+
+</body>
+</html>
